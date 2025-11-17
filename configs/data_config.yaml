@@ -1,0 +1,141 @@
+# Data Pipeline Configuration for Punjabi-English Translation
+
+# Language pair settings
+languages:
+  source: "pa"  # Punjabi
+  target: "en"  # English
+  source_name: "Punjabi"
+  target_name: "English"
+
+# Data sources
+data_sources:
+  samanantar:
+    enabled: true
+    url: "https://ai4bharat-public-projects.s3.amazonaws.com/samanantar/samanantar-pa.zip"
+    format: "tsv"
+
+  opus:
+    enabled: true
+    corpora:
+      - "Ubuntu"
+      - "GNOME"
+      - "KDE"
+      - "Tatoeba"
+
+  flores:
+    enabled: true
+    url: "https://github.com/facebookresearch/flores/raw/main/flores200/README.md"
+
+  custom:
+    enabled: false
+    path: "data/raw/custom"
+
+# Data cleaning parameters
+cleaning:
+  # Length filters (in tokens)
+  min_length: 3
+  max_length: 100
+
+  # Length ratio filter (source/target)
+  min_length_ratio: 0.5
+  max_length_ratio: 2.0
+
+  # Deduplication
+  remove_duplicates: true
+  fuzzy_dedup_threshold: 0.95
+
+  # Language detection
+  lang_detect_threshold: 0.9
+
+  # Unicode normalization
+  unicode_norm: "NFKC"
+
+  # Remove noisy pairs
+  remove_urls: true
+  remove_emails: true
+  remove_html: true
+  max_digit_ratio: 0.5
+  max_punct_ratio: 0.3
+
+  # Script validation
+  validate_punjabi_script: true  # Gurmukhi
+  validate_english_script: true  # Latin
+
+# Tokenizer settings
+tokenizer:
+  type: "sentencepiece"
+  model_type: "bpe"
+  vocab_size: 32000
+  character_coverage: 0.9995
+  shared_vocab: true  # true for shared, false for separate
+
+  # Special tokens
+  pad_token: "<pad>"
+  unk_token: "<unk>"
+  bos_token: "<s>"
+  eos_token: "</s>"
+
+  # Training parameters
+  normalization_rule_name: "nfkc"
+  split_by_whitespace: true
+  split_by_unicode_script: true
+  byte_fallback: true
+
+# Data splits
+splits:
+  train: 0.90
+  validation: 0.05
+  test: 0.05
+
+  # Minimum samples per split
+  min_train_samples: 100000
+  min_val_samples: 5000
+  min_test_samples: 5000
+
+  # Random seed for reproducibility
+  seed: 42
+
+  # Stratification (optional, by domain/length)
+  stratify_by_length: true
+  length_bins: 5
+
+# Quality filters
+quality:
+  # Remove pairs where translations are identical
+  remove_identical: true
+
+  # Remove pairs with excessive repetition
+  max_word_repetition: 5
+
+  # Minimum unique words
+  min_unique_words: 2
+
+  # Remove pairs with mismatched punctuation patterns
+  check_punctuation_balance: true
+
+# Output paths
+paths:
+  raw_data_dir: "data/raw"
+  processed_data_dir: "data/processed"
+  splits_dir: "data/splits"
+  tokenizer_dir: "models/tokenizer"
+  logs_dir: "logs"
+
+# Output formats
+output:
+  format: "json"  # json, tsv, or parquet
+  compression: "gzip"  # none, gzip, or bz2
+  save_metadata: true
+
+# Processing settings
+processing:
+  batch_size: 10000
+  num_workers: 4
+  cache_dir: ".cache"
+  verbose: true
+
+# Statistics and reporting
+reporting:
+  save_statistics: true
+  plot_distributions: true
+  sample_size: 100  # Number of samples to save for inspection
