@@ -15,6 +15,7 @@ This project implements a neural machine translation system that:
 
 - **[Translation Pipeline Plan](TRANSLATION_PIPELINE_PLAN.md)** - Complete 8-week implementation plan
 - **[Phase 1 README](PHASE1_README.md)** - Data preparation pipeline guide
+- **[Phase 2 README](PHASE2_README.md)** - Model training guide
 
 ## Project Status
 
@@ -28,11 +29,16 @@ Complete implementation for data collection and preparation:
 
 **See [PHASE1_README.md](PHASE1_README.md) for detailed usage instructions**
 
-### 🔲 Phase 2: Model Training (TODO)
-- [ ] Training infrastructure setup
-- [ ] MarianMT model implementation
-- [ ] Training loop with evaluation
-- [ ] Hyperparameter tuning
+### ✅ Phase 2: Model Training (IMPLEMENTED)
+Complete implementation for training translation models:
+- [x] Custom transformer architecture (~74M parameters)
+- [x] Training loop with mixed precision (FP16)
+- [x] BLEU, chrF, TER evaluation metrics
+- [x] Checkpoint management and early stopping
+- [x] TensorBoard logging and monitoring
+- [x] Bidirectional training support (PA↔EN)
+
+**See [PHASE2_README.md](PHASE2_README.md) for detailed usage instructions**
 
 ### 🔲 Phase 3: Model Optimization (TODO)
 - [ ] Model quantization
@@ -64,32 +70,61 @@ python scripts/run_data_pipeline.py
 
 See [PHASE1_README.md](PHASE1_README.md) for detailed instructions.
 
+### Phase 2: Train Model
+
+```bash
+# 1. Train Punjabi → English model
+python scripts/05_train_model.py --direction pa-en
+
+# 2. Train English → Punjabi model
+python scripts/05_train_model.py --direction en-pa
+
+# 3. Evaluate trained model
+python scripts/06_evaluate_model.py \
+    --checkpoint models/checkpoints/pa-en-42/best_model.pt \
+    --source-file data/splits/test.pa \
+    --reference-file data/splits/test.en
+
+# Output: Trained models in models/checkpoints/
+```
+
+See [PHASE2_README.md](PHASE2_README.md) for detailed instructions.
+
 ## Directory Structure
 
 ```
 text_trans_1/
-├── configs/              # Configuration files
-│   └── data_config.yaml
-├── data/                 # Data files (gitignored)
-│   ├── raw/             # Downloaded datasets
-│   ├── processed/       # Cleaned data
-│   └── splits/          # Train/val/test splits
-├── models/              # Model files
-│   ├── tokenizer/       # Trained tokenizers
-│   ├── checkpoints/     # Training checkpoints
-│   └── final/          # Final models
-├── scripts/             # Pipeline scripts
+├── configs/                  # Configuration files
+│   ├── data_config.yaml     # Data pipeline config
+│   └── train_config.yaml    # Training config
+├── data/                     # Data files (gitignored)
+│   ├── raw/                 # Downloaded datasets
+│   ├── processed/           # Cleaned data
+│   └── splits/              # Train/val/test splits
+├── models/                   # Model files
+│   ├── tokenizer/           # Trained tokenizers
+│   ├── checkpoints/         # Training checkpoints
+│   └── final/              # Final models
+├── scripts/                  # Pipeline scripts
 │   ├── 01_download_data.py
 │   ├── 02_clean_data.py
 │   ├── 03_split_data.py
 │   ├── 04_train_tokenizer.py
+│   ├── 05_train_model.py    # Train translation model
+│   ├── 06_evaluate_model.py # Evaluate model
 │   └── run_data_pipeline.py
-├── utils/               # Utility functions
-├── logs/                # Execution logs
-├── requirements.txt     # Python dependencies
-├── README.md           # This file
+├── training/                 # Training modules
+│   ├── models/              # Model architectures
+│   ├── data/                # Dataset loaders
+│   ├── evaluation/          # Metrics and evaluation
+│   └── trainer.py           # Training logic
+├── utils/                    # Utility functions
+├── logs/                     # Execution logs
+├── requirements.txt          # Python dependencies
+├── README.md                # This file
 ├── TRANSLATION_PIPELINE_PLAN.md
-└── PHASE1_README.md
+├── PHASE1_README.md
+└── PHASE2_README.md
 ```
 
 ## Key Features
@@ -100,11 +135,18 @@ text_trans_1/
 - Stratified train/val/test splitting
 - SentencePiece BPE tokenization (32K vocab)
 
-### Planned Features
-- Lightweight transformer architecture (~60-80M params)
-- Mobile-optimized inference (INT8 quantization)
+### Model Training (Phase 2)
+- Lightweight transformer architecture (~74M params)
+- Mixed precision training (FP16)
+- BLEU, chrF, TER evaluation
+- Checkpoint management and early stopping
+- TensorBoard monitoring
+
+### Planned Features (Phase 3-4)
+- Model quantization (INT8)
+- ONNX and TensorFlow Lite conversion
 - Cross-platform deployment (iOS + Android)
-- Offline translation capability
+- Mobile optimization (<50MB, <500ms inference)
 
 ## Requirements
 

@@ -1,0 +1,192 @@
+# Training Configuration for Punjabi-English Translation
+
+# Model architecture
+model:
+  type: "transformer"  # transformer or marian
+
+  # Architecture parameters
+  encoder_layers: 6
+  decoder_layers: 6
+  hidden_size: 512
+  num_attention_heads: 8
+  intermediate_size: 2048
+
+  # Regularization
+  dropout: 0.1
+  attention_dropout: 0.1
+  activation_dropout: 0.1
+
+  # Model initialization
+  init_std: 0.02
+
+  # Max sequence length
+  max_position_embeddings: 512
+  max_source_length: 128
+  max_target_length: 128
+
+# Training parameters
+training:
+  # Directions to train
+  directions:
+    - source: "pa"
+      target: "en"
+      name: "pa-en"
+    - source: "en"
+      target: "pa"
+      name: "en-pa"
+
+  # Batch sizes
+  batch_size: 32
+  gradient_accumulation_steps: 4
+  effective_batch_size: 128  # batch_size * gradient_accumulation_steps
+
+  # Learning rate
+  learning_rate: 5.0e-4
+  warmup_steps: 4000
+
+  # Training duration
+  num_train_epochs: 10
+  max_steps: 100000  # Override epochs if set
+
+  # Evaluation
+  eval_steps: 2000
+  save_steps: 5000
+  logging_steps: 100
+
+  # Early stopping
+  early_stopping_patience: 10
+  early_stopping_threshold: 0.0001
+
+  # Optimization
+  optimizer: "adamw"
+  adam_beta1: 0.9
+  adam_beta2: 0.98
+  adam_epsilon: 1.0e-9
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+
+  # Learning rate scheduler
+  lr_scheduler_type: "inverse_sqrt"  # linear, cosine, inverse_sqrt
+
+  # Mixed precision training
+  fp16: true
+  fp16_opt_level: "O1"
+
+  # Label smoothing
+  label_smoothing: 0.1
+
+  # Gradient checkpointing (saves memory)
+  gradient_checkpointing: false
+
+  # Resume training
+  resume_from_checkpoint: null
+
+# Data parameters
+data:
+  # Data paths (from Phase 1)
+  data_dir: "data/splits"
+  tokenizer_dir: "models/tokenizer"
+
+  # Tokenizer settings
+  shared_vocab: true
+  tokenizer_name: "tokenizer_shared"  # or tokenizer_pa/tokenizer_en
+
+  # Data loading
+  num_workers: 4
+  prefetch_factor: 2
+  pin_memory: true
+
+  # Data augmentation (optional)
+  augmentation:
+    enabled: false
+    noise_prob: 0.1
+    mask_prob: 0.1
+
+# Evaluation parameters
+evaluation:
+  # Metrics to compute
+  metrics:
+    - "bleu"
+    - "chrf"
+    - "ter"
+
+  # Generation parameters
+  num_beams: 4
+  max_length: 128
+  length_penalty: 1.0
+  early_stopping: true
+
+  # Evaluation on multiple test sets
+  test_sets:
+    - name: "validation"
+      source_file: "data/splits/val.{src}"
+      target_file: "data/splits/val.{tgt}"
+    - name: "test"
+      source_file: "data/splits/test.{src}"
+      target_file: "data/splits/test.{tgt}"
+
+# Output paths
+output:
+  output_dir: "models/checkpoints"
+  final_model_dir: "models/final"
+  logs_dir: "logs"
+
+  # Checkpoint management
+  save_total_limit: 3  # Keep only best 3 checkpoints
+  save_best_only: false
+  metric_for_best_model: "bleu"
+  greater_is_better: true
+
+# Logging and monitoring
+logging:
+  # Console logging
+  report_to: ["tensorboard", "console"]  # tensorboard, wandb, console
+
+  # Weights & Biases (optional)
+  wandb:
+    enabled: false
+    project: "pa-en-translation"
+    entity: null
+    run_name: null
+
+  # TensorBoard
+  tensorboard:
+    enabled: true
+    log_dir: "runs"
+
+# Hardware and performance
+hardware:
+  # Device
+  device: "cuda"  # cuda, cpu, mps
+
+  # Multi-GPU training
+  distributed: false
+  local_rank: -1
+
+  # DataLoader workers
+  dataloader_num_workers: 4
+
+  # Seed for reproducibility
+  seed: 42
+
+# Model export (after training)
+export:
+  # Export formats
+  formats:
+    - "pytorch"
+    - "onnx"
+    - "tflite"
+
+  # Quantization for mobile
+  quantize: true
+  quantization_mode: "dynamic"  # dynamic, static, qat
+
+  # ONNX export settings
+  onnx:
+    opset_version: 14
+    optimize: true
+
+  # TFLite export settings
+  tflite:
+    optimize: true
+    representative_dataset_size: 100
